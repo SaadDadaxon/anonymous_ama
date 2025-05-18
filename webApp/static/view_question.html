@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Javob Berish</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #e0f7fa 0%, #80deea 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      max-width: 500px;
+      width: 100%;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-size: 24px;
+      color: #1a3c34;
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    .question {
+      font-size: 16px;
+      color: #263238;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 10px;
+    }
+
+    label {
+      font-size: 15px;
+      color: #263238;
+      margin-bottom: 8px;
+      display: block;
+      font-weight: 500;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      resize: vertical;
+      min-height: 120px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #26a69a;
+      box-shadow: 0 0 8px rgba(38, 166, 154, 0.2);
+    }
+
+    button {
+      width: 48%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 500;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    .submit-btn {
+      background: linear-gradient(to right, #26a69a, #4db6ac);
+      color: white;
+      margin-right: 4%;
+    }
+
+    .reject-btn {
+      background: linear-gradient(to right, #d32f2f, #ef5350);
+      color: white;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    .submit-btn:hover {
+      background: linear-gradient(to right, #4db6ac, #26a69a);
+    }
+
+    .reject-btn:hover {
+      background: linear-gradient(to right, #ef5350, #d32f2f);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .message {
+      margin-top: 15px;
+      font-size: 15px;
+      text-align: center;
+      display: none;
+    }
+
+    .success {
+      color: #2e7d32;
+    }
+
+    .error {
+      color: #d32f2f;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px;
+        margin: 10px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      button {
+        padding: 12px;
+        font-size: 14px;
+        width: 100%;
+        margin: 10px 0;
+      }
+
+      .submit-btn {
+        margin-right: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Savolga Javob Berish</h1>
+
+    <div class="question" id="question-text"></div>
+
+    <label for="answer">Javobingiz:</label>
+    <textarea id="answer" placeholder="Javobingizni shu yerga yozing..."></textarea>
+
+    <input type="hidden" id="admin_id">
+    <input type="hidden" id="channel_id">
+    <input type="hidden" id="user_id">
+    <input type="hidden" id="question">
+
+    <button class="submit-btn" onclick="sendAnswer()">Javob Yuborish</button>
+    <button class="reject-btn" onclick="rejectQuestion()">Rad Etish</button>
+
+    <div id="result" class="message success">✅ Javob muvaffaqiyatli yuborildi!</div>
+    <div id="error" class="message error"></div>
+  </div>
+
+  <script>
+    // URL parametrlaridan ma’lumotlarni olish
+    const urlParams = new URLSearchParams(window.location.search);
+    const adminId = urlParams.get('admin_id') || '';
+    const channelId = urlParams.get('channel_id') || '';
+    const userId = urlParams.get('user_id') || '';
+    const question = decodeURIComponent(urlParams.get('question') || '');
+
+    // Ma’lumotlarni HTML’ga joylashtirish
+    document.getElementById('admin_id').value = adminId;
+    document.getElementById('channel_id').value = channelId;
+    document.getElementById('user_id').value = userId;
+    document.getElementById('question').value = question;
+    document.getElementById('question-text').textContent = question || 'Savol topilmadi';
+
+    console.log('Params:', { adminId, channelId, userId, question }); // Debug
+
+    function sendAnswer() {
+      const answer = document.getElementById("answer").value.trim();
+      const adminId = document.getElementById("admin_id").value;
+      const channelId = document.getElementById("channel_id").value;
+      const userId = document.getElementById("user_id").value;
+      const question = document.getElementById("question").value;
+
+      console.log('Sending answer:', { adminId, channelId, userId, question, answer }); // Debug
+
+      // Validatsiya
+      if (!answer) {
+        document.getElementById("error").style.display = "block";
+        document.getElementById("error").textContent = "Iltimos, javob yozing!";
+        console.log('Validation failed: Empty answer');
+        return;
+      }
+
+      if (!adminId || !channelId || !userId || !question) {
+        document.getElementById("error").style.display = "block";
+        document.getElementById("error").textContent = "Ma’lumotlar yetishmayapti!";
+        console.log('Validation failed: Missing parameters');
+        return;
+      }
+
+      // Parametrlarni int ga aylantirish
+      if (!Number.isInteger(Number(adminId)) || !Number.isInteger(Number(channelId)) || !Number.isInteger(Number(userId))) {
+        document.getElementById("error").style.display = "block";
+        document.getElementById("error").textContent = "Parametrlar butun son bo‘lishi kerak!";
+        console.log('Validation failed: Parameters must be integers');
+        return;
+      }
+
+      // So‘rov URL’si
+      const url = `https://babb-95-214-210-208.ngrok-free.app/api/send_answer?admin_id=${adminId}&channel_id=${channelId}&user_id=${userId}&question=${encodeURIComponent(question)}&answer=${encodeURIComponent(answer)}`;
+      console.log('Fetch URL:', url); // Debug
+
+      // Xabarni tozalash
+      document.getElementById("result").style.display = "none";
+      document.getElementById("error").style.display = "none";
+
+      fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+        .then(response => {
+          console.log('Response status:', response.status); // Debug
+          if (!response.ok) {
+            throw new Error(`HTTP xato: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Response data:', data); // Debug
+          document.getElementById("result").style.display = "block";
+          document.getElementById("answer").value = ''; // Maydonni tozalash
+          setTimeout(() => {
+            window.location.href = '/answer_success'; // Redirect
+          }, 1500);
+        })
+        .catch(error => {
+          console.error('Fetch error:', error); // Debug
+          document.getElementById("error").style.display = "block";
+          document.getElementById("error").textContent = `Xato: ${error.message || 'Noma’lum xato yuz berdi'}`;
+        });
+    }
+
+    function rejectQuestion() {
+      const adminId = document.getElementById("admin_id").value;
+      const channelId = document.getElementById("channel_id").value;
+      const userId = document.getElementById("user_id").value;
+      const question = document.getElementById("question").value;
+
+      console.log('Rejecting question:', { adminId, channelId, userId, question }); // Debug
+
+      // Validatsiya
+      if (!adminId || !channelId || !userId || !question) {
+        document.getElementById("error").style.display = "block";
+        document.getElementById("error").textContent = "Ma’lumotlar yetishmayapti!";
+        console.log('Validation failed: Missing parameters');
+        return;
+      }
+
+      // Parametrlarni int ga aylantirish
+      if (!Number.isInteger(Number(adminId)) || !Number.isInteger(Number(channelId)) || !Number.isInteger(Number(userId))) {
+        document.getElementById("error").style.display = "block";
+        document.getElementById("error").textContent = "Parametrlar butun son bo‘lishi kerak!";
+        console.log('Validation failed: Parameters must be integers');
+        return;
+      }
+
+      // So‘rov URL’si
+      const url = `https://babb-95-214-210-208.ngrok-free.app/api/reject_question?admin_id=${adminId}&channel_id=${channelId}&user_id=${userId}&question=${encodeURIComponent(question)}`;
+      console.log('Fetch URL:', url); // Debug
+
+      // Xabarni tozalash
+      document.getElementById("result").style.display = "none";
+      document.getElementById("error").style.display = "none";
+
+      fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+        .then(response => {
+          console.log('Response status:', response.status); // Debug
+          if (!response.ok) {
+            throw new Error(`HTTP xato: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Response data:', data); // Debug
+          document.getElementById("result").style.display = "block";
+          document.getElementById("result").textContent = "✅ Savol rad etildi!";
+          setTimeout(() => {
+            window.location.href = '/reject_success'; // Redirect
+          }, 1500);
+        })
+        .catch(error => {
+          console.error('Fetch error:', error); // Debug
+          document.getElementById("error").style.display = "block";
+          document.getElementById("error").textContent = `Xato: ${error.message || 'Noma’lum xato yuz berdi'}`;
+        });
+    }
+  </script>
+</body>
+</html>
